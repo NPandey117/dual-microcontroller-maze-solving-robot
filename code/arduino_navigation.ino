@@ -1,45 +1,57 @@
-int LeftSpeedPin=11;
-int RightSpeedPin=6;
-int LeftDir1=10;
-int LeftDir2=9;
-int RightDir1=7;
-int RightDir2=8;
-void setup(){
-  pinMode(LeftDir1,OUTPUT);
-  pinMode(LeftDir2,OUTPUT);
-  pinMode(RightDir1,OUTPUT);
-  pinMode(RightDir2,OUTPUT);
-  pinMode(LeftSpeedPin,OUTPUT);
-  pinMode(RightSpeedPin,OUTPUT);
+//Left-Hand Rule
+//once you stop finding an obstacle on left you immediately turn left
+//else you keep moving forward
+//if there is an obstacle in front you turn right
+int LeftTrigPin=13;     //Left Sensor
+int LeftEchoPin=12;     //Left Sensor
+int FrontTrigPin=4;     //Front Sensor
+int FrontEchoPin=3;     //Front Sensor
+long distanceLeft,durationLeft,distanceFront,durationFront;
+void setup()
+{
+ pinMode(LeftTrigPin,OUTPUT);
+ pinMode(LeftEchoPin,INPUT);
+ pinMode(FrontTrigPin,OUTPUT);
+ pinMode(FrontEchoPin,INPUT);
   Serial.begin(9600);
-  analogWrite(LeftSpeedPin,200);
-  analogWrite(RightSpeedPin,200);
 }
-void loop(){
+
+void loop()
+{
+  delayMicroseconds(1000);
+  digitalWrite(LeftTrigPin,HIGH);
+  delayMicroseconds(100);
+  digitalWrite(LeftTrigPin,LOW);
+  durationLeft=pulseIn(LeftEchoPin,HIGH);
+  distanceLeft=(durationLeft*0.0343)/2;
   
-  while(Serial.available()>0){
-   char cmd=Serial.read();
-    if(cmd=='L'){
-      //left wheel stops right wheel turns
-      digitalWrite(LeftDir1,LOW);
-      digitalWrite(LeftDir2,HIGH);
-      digitalWrite(RightDir1,HIGH);
-      digitalWrite(RightDir2,LOW);
-    }
-    if(cmd=='F'){
-      //move forward
-      digitalWrite(LeftDir1,HIGH);
-      digitalWrite(LeftDir2,LOW);
-      digitalWrite(RightDir1,HIGH);
-      digitalWrite(RightDir2,LOW);
-    }
-    if(cmd=='R'){
-      //right wheel stops left wheel turns
-      digitalWrite(LeftDir1,HIGH);
-      digitalWrite(LeftDir2,LOW);
-      digitalWrite(RightDir1,LOW);
-      digitalWrite(RightDir2,HIGH);
-    }
+  delay(100);
+  
+  digitalWrite(FrontTrigPin,HIGH);
+  delayMicroseconds(100);
+  digitalWrite(FrontTrigPin,LOW);
+  durationFront=pulseIn(FrontEchoPin,HIGH);
+  distanceFront=(durationFront*0.0343)/2;
+  if(distanceLeft>15){
+  //no obstacle on left
+  //turn left,delay so that turn completes then move forward
+    Serial.write('L');
+    delay(1000);
+    Serial.write('F');
   }
-  
+  else if(distanceFront>15){
+  //no obstacle on front
+    //move forward
+    Serial.write('F');
+  }
+  else{
+  //turn right, delay then move forward
+    Serial.write('R');
+    delay(1000);
+    Serial.write('F');
+  }
 }
+
+
+
+
